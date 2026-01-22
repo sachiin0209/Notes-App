@@ -7,22 +7,31 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    print("DEBUG: Register endpoint hit", flush=True)
     data = request.json
     email = data.get('email')
     password = data.get('password')
+    print(f"DEBUG: Processing registration for {email}", flush=True)
     
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
     
-    existing_user = get_user_by_email(email)
-    if existing_user:
-        return jsonify({"error": "User already exists"}), 409
-    
-    password_hash = generate_password_hash(password)
     try:
+        print("DEBUG: Checking existing user...", flush=True)
+        existing_user = get_user_by_email(email)
+        print(f"DEBUG: Existing user check result: {existing_user}", flush=True)
+        if existing_user:
+            return jsonify({"error": "User already exists"}), 409
+        
+        password_hash = generate_password_hash(password)
+        print("DEBUG: Creating user...", flush=True)
         user_id = create_user(email, password_hash)
+        print(f"DEBUG: User created with ID {user_id}", flush=True)
         return jsonify({"message": "User registered", "user_id": user_id}), 201
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"DEBUG: Exception during registration: {e}", flush=True)
         return jsonify({"error": str(e)}), 500
 
 @auth_bp.route('/login', methods=['POST'])

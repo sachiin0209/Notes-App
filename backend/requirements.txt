@@ -3,8 +3,8 @@ flask-jwt-extended
 flask-cors
 supabase
 python-dotenv
-scikit-learn
+# scikit-learn
 werkzeug
---extra-index-url https://download.pytorch.org/whl/cpu
-torch
-sentence-transformers
+# --extra-index-url https://download.pytorch.org/whl/cpu
+# torch
+# sentence-transformers
