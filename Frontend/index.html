@@ -53,6 +53,11 @@
             background: #764ba2;
         }
     </style>
+    <script>
+        if (localStorage.getItem('token')) {
+            window.location.href = 'notes.html';
+        }
+    </script>
 </head>
 <body>
     <div class="container">

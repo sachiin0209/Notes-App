@@ -307,6 +307,10 @@
                 const res = await fetch(`${API_BASE}/notes`, {
                     headers: {'Authorization': `Bearer ${token}`}
                 });
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
                 const notes = await res.json();
                 displayNotes(notes);
             } catch (error) {
@@ -330,6 +334,10 @@
                     },
                     body: JSON.stringify({ query })
                 });
+                if (res.status === 401) {
+                    logout();
+                    return;
+                }
                 const results = await res.json();
                 displaySearchResults(results);
             } catch (error) {
@@ -343,16 +351,19 @@
                 notesList.innerHTML = '<p>No notes yet. Create one!</p>';
                 return;
             }
-            notesList.innerHTML = notes.map(note => `
+            notesList.innerHTML = notes.map(note => {
+                const safeTitle = note.title.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                const safeContent = note.content.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                return `
                 <div class="note-card">
                     <h3>${note.title}</h3>
                     <p>${note.content}</p>
                     <div class="note-actions">
-                        <button class="edit-btn" onclick="openEditModal(${note.id}, '${note.title.replace(/'/g, "\\'")}', '${note.content.replace(/'/g, "\\'")})">Edit</button>
+                        <button class="edit-btn" onclick='openEditModal(${note.id}, "${safeTitle}", "${safeContent}")'>Edit</button>
                         <button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function displaySearchResults(results) {
@@ -364,13 +375,15 @@
             notesList.innerHTML = results.map(result => {
                 const note = result.note;
                 const score = (result.score * 100).toFixed(1);
+                 const safeTitle = note.title.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                const safeContent = note.content.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                 return `
                     <div class="note-card">
                         <h3>${note.title}</h3>
                         <p>${note.content}</p>
                         <div class="score">Relevance: ${score}%</div>
                         <div class="note-actions">
-                            <button class="edit-btn" onclick="openEditModal(${note.id}, '${note.title.replace(/'/g, "\\'")}', '${note.content.replace(/'/g, "\\'")})">Edit</button>
+                            <button class="edit-btn" onclick='openEditModal(${note.id}, "${safeTitle}", "${safeContent}")'>Edit</button>
                             <button class="delete-btn" onclick="deleteNote(${note.id})">Delete</button>
                         </div>
                     </div>
