@@ -54,8 +54,17 @@
         }
     </style>
     <script>
-        if (localStorage.getItem('token')) {
-            window.location.href = 'notes.html';
+        function isLikelyJWT(token) {
+            if (!token || typeof token !== "string") return false;
+            const parts = token.split(".");
+            return parts.length === 3;
+        }
+
+        const token = localStorage.getItem("token");
+
+        if (isLikelyJWT(token)) {
+            // Don’t auto-trust it forever — just redirect optimistically
+            window.location.href = "./notes.html";
         }
     </script>
 </head>
@@ -64,8 +73,8 @@
         <h1>Welcome to Notes App</h1>
         <p>A powerful note-taking application with semantic search capabilities</p>
         <div class="button-group">
-            <a href="login.html">Login</a>
-            <a href="register.html">Register</a>
+            <a href="./login.html">Login</a>
+            <a href="./register.html">Register</a>
         </div>
     </div>
 </body>

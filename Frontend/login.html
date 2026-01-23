@@ -113,8 +113,15 @@
         }
     </style>
     <script>
-        if (localStorage.getItem('token')) {
-            window.location.href = 'notes.html';
+        function isLikelyJWT(token) {
+            if (!token || typeof token !== "string") return false;
+            const parts = token.split(".");
+            return parts.length === 3;
+        }
+
+        const token = localStorage.getItem("token");
+        if (isLikelyJWT(token)) {
+            window.location.href = "./notes.html";
         }
     </script>
 </head>
@@ -135,43 +142,61 @@
             <div id="message" class="message"></div>
         </form>
         <div class="link">
-            <p>Don't have an account? <a href="register.html">Register here</a></p>
-            <p><a href="index.html">Back to home</a></p>
+            <p>Don't have an account? <a href="./register.html">Register here</a></p>
+            <p><a href="./index.html">Back to home</a></p>
         </div>
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000';
+        const API_BASE = "/api";
 
-        document.getElementById('login-form').onsubmit = async (e) => {
+        document.getElementById("login-form").onsubmit = async (e) => {
             e.preventDefault();
-            const messageDiv = document.getElementById('message');
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+
+            const messageDiv = document.getElementById("message");
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+                messageDiv.textContent = "Email and password are required";
+                messageDiv.className = "message error";
+                messageDiv.style.display = "block";
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await res.json();
 
-                if (res.ok && data.access_token) {
-                    localStorage.setItem('token', data.access_token);
-                    messageDiv.textContent = 'Login successful! Redirecting...';
-                    messageDiv.className = 'message success';
-                    messageDiv.style.display = 'block';
-                    setTimeout(() => window.location.href = 'notes.html', 1000);
-                } else {
-                    messageDiv.textContent = data.error || 'Login failed';
-                    messageDiv.className = 'message error';
-                    messageDiv.style.display = 'block';
+                let data = null;
+                try {
+                    data = await res.json();
+                } catch {
+                    data = null;
                 }
+
+                if (res.ok && data && data.access_token) {
+                    localStorage.setItem("token", data.access_token);
+                    messageDiv.textContent = "Login successful! Redirecting...";
+                    messageDiv.className = "message success";
+                    messageDiv.style.display = "block";
+                    setTimeout(() => {
+                        window.location.href = "./notes.html";
+                    }, 1000);
+                } else {
+                    const errMsg = (data && data.error) ? data.error : "Login failed";
+                    messageDiv.textContent = errMsg;
+                    messageDiv.className = "message error";
+                    messageDiv.style.display = "block";
+                }
+
             } catch (error) {
-                messageDiv.textContent = 'Error: ' + error.message;
-                messageDiv.className = 'message error';
-                messageDiv.style.display = 'block';
+                messageDiv.textContent = "Network error: " + error.message;
+                messageDiv.className = "message error";
+                messageDiv.style.display = "block";
             }
         };
     </script>

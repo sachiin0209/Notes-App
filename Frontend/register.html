@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Notes App</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -36,9 +31,7 @@
             margin-bottom: 30px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .form-group { margin-bottom: 20px; }
 
         label {
             display: block;
@@ -112,11 +105,6 @@
             text-decoration: underline;
         }
     </style>
-    <script>
-        if (localStorage.getItem('token')) {
-            window.location.href = 'notes.html';
-        }
-    </script>
 </head>
 
 <body>
@@ -145,47 +133,79 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000';
+        const API_BASE = "/api";
 
-        document.getElementById('register-form').onsubmit = async (e) => {
+        function isLikelyJWT(token) {
+            if (!token || typeof token !== "string") return false;
+            return token.split(".").length === 3;
+        }
+
+        // Redirect only if token *looks* valid
+        const existingToken = localStorage.getItem("token");
+        if (isLikelyJWT(existingToken)) {
+            window.location.href = "notes.html";
+        }
+
+        document.getElementById("register-form").onsubmit = async (e) => {
             e.preventDefault();
-            const messageDiv = document.getElementById('message');
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
+
+            const messageDiv = document.getElementById("message");
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            if (!email) {
+                showError("Email is required");
+                return;
+            }
+
+            if (password.length < 6) {
+                showError("Password must be at least 6 characters");
+                return;
+            }
 
             if (password !== confirmPassword) {
-                messageDiv.textContent = 'Passwords do not match';
-                messageDiv.className = 'message error';
-                messageDiv.style.display = 'block';
+                showError("Passwords do not match");
                 return;
             }
 
             try {
                 const res = await fetch(`${API_BASE}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await res.json();
+
+                let data = {};
+                try {
+                    data = await res.json();
+                } catch (_) {
+                    throw new Error("Invalid server response");
+                }
 
                 if (res.ok) {
-                    messageDiv.textContent = 'Registration successful! Redirecting to login...';
-                    messageDiv.className = 'message success';
-                    messageDiv.style.display = 'block';
-                    setTimeout(() => window.location.href = 'login.html', 1500);
+                    messageDiv.textContent = "Registration successful! Redirecting to login...";
+                    messageDiv.className = "message success";
+                    messageDiv.style.display = "block";
+                    setTimeout(() => {
+                        window.location.href = "login.html";
+                    }, 1500);
                 } else {
-                    messageDiv.textContent = data.error || 'Registration failed';
-                    messageDiv.className = 'message error';
-                    messageDiv.style.display = 'block';
+                    showError(data.error || "Registration failed");
                 }
+
             } catch (error) {
-                messageDiv.textContent = 'Error: ' + error.message;
-                messageDiv.className = 'message error';
-                messageDiv.style.display = 'block';
+                showError("Network error: " + error.message);
             }
         };
+
+        function showError(msg) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.textContent = msg;
+            messageDiv.className = "message error";
+            messageDiv.style.display = "block";
+        }
     </script>
 </body>
-
 </html>
